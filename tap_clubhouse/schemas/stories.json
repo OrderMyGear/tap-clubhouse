@@ -56,6 +56,9 @@
     "id": {
       "type": "integer"
     },
+    "iteration_id": {
+      "type": ["integer","null"]
+    },
     "labels": {
       "type": "array",
       "items": {
