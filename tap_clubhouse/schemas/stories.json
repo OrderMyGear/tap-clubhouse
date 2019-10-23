@@ -169,6 +169,59 @@
     "story_type": {
       "type": "string"
     },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "complete": {
+            "type": "boolean"
+          },
+          "completed_at": {
+            "type": ["string","null"],
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string"
+          },
+          "entity_type": {
+            "type": "string"
+          },
+          "external_id": {
+            "type": ["string","null"]
+          },
+          "id": {
+            "type": "integer"
+          },
+          "mention_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "owner_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "position": {
+            "type": "integer"
+          },
+          "story_id": {
+            "type": "integer"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
     "updated_at": {
       "type": ["string","null"],
       "format": "date-time"

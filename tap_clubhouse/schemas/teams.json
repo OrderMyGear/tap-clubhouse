@@ -52,6 +52,12 @@
         "name": {
           "type": "string"
         },
+        "project_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
         "states": {
           "type": "array",
           "items": {

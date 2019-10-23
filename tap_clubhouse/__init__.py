@@ -95,7 +95,7 @@ def gen_request(entity, params=None, data=None):
         rows = resp
 
     for row in sorted(rows, key=itemgetter("updated_at")):
-        yield row
+        yield clean_row(row)
 
     if next_params != None:
         yield from gen_request(entity, params=next_params)
@@ -104,23 +104,34 @@ def gen_request(entity, params=None, data=None):
 def sync_search(entity):
     singer.write_schema(entity, utils.load_schema(entity), ["id"])
 
-    start = get_start(entity)
-    start_date = start.partition("T")[0]
-    end_date = datetime.date.today().strftime("%Y-%m-%d")
+    start_dt = utils.strptime(get_start(entity))
+    end_dt = datetime.datetime.today()
 
-    params = {
-        "page_size": 25,
-        "query": "updated:" + start_date + ".." + end_date,
-    }
-
-    LOGGER.info("Syncing {} from {}".format(entity, start))
-    for _, row in enumerate(gen_request(entity, params=params)):
-        if row["updated_at"] >= start:
-            utils.update_state(STATE, entity, row["updated_at"])
-            singer.write_record(entity, row)
+    sync_search_range(entity, start_dt, end_dt)
 
     singer.write_state(STATE)
 
+def sync_search_range(entity, start_dt, end_dt):
+    start = start_dt.strftime("%Y-%m-%d")
+    end = end_dt.strftime("%Y-%m-%d")
+
+    params = {
+        "page_size": 25,
+        "query": "updated:" + start + ".." + end,
+        "token": CONFIG["api_token"],
+    }
+
+    resp = request(get_url(entity), params, {}).json()
+
+    if resp["total"] > 1000:
+        mid_dt = start_dt + (end_dt - start_dt)/2
+        sync_search_range(entity, start_dt, mid_dt)
+        sync_search_range(entity, mid_dt, end_dt)
+    else:
+        for _, row in enumerate(gen_request(entity, params=params)):
+            if row["updated_at"] >= start:
+                utils.update_state(STATE, entity, row["updated_at"])
+                singer.write_record(entity, row)
 
 def sync_list(entity):
     singer.write_schema(entity, utils.load_schema(entity), ["id"])
@@ -135,6 +146,13 @@ def sync_list(entity):
 
     singer.write_state(STATE)
 
+def clean_row(row):
+    row.pop('branches', None)
+    row.pop('comments', None)
+    row.pop('commits', None)
+    row.pop('files', None)
+    row.pop('linked_files', None)
+    return row
 
 def do_sync():
     LOGGER.info("Starting Clubhouse sync")
